@@ -1,0 +1,16 @@
+---
+- name: Configure Satellite Web UI to use Internal RHOKP Documentation Endpoint
+  hosts: satellite_servers
+  become: true
+  vars_files:
+    - ../vars/fsi_airgap_vars.yml
+
+  tasks:
+    - name: Update Red Hat documentation server URL setting in Satellite
+      redhat.satellite.setting:
+        server_url: "https://{{ satellite_fqdn }}"
+        username: "{{ satellite_admin_user }}"
+        password: "{{ satellite_admin_password }}"
+        validate_certs: false
+        name: doc_server_url
+        value: "https://rhokp.{{ fsi_domain }}:{{ rhokp_https_port }}"

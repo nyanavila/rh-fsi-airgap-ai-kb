@@ -1,0 +1,10 @@
+*.retry
+*.log
+*.tar
+*.tar.gz
+/files/*.xml
+configs/rhokp/httpd-ssl/private/*.pem
+configs/mcp/mcp-environment.env
+vars/vault_*.yml
+.DS_Store
+__pycache__/

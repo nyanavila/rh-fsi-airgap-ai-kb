@@ -1,0 +1,30 @@
+---
+- name: Deploy Satellite Model Context Protocol (MCP) AI Gateway
+  hosts: ai_assistant_gateways
+  become: true
+  vars_files:
+    - ../vars/fsi_airgap_vars.yml
+
+  tasks:
+    - name: Pull Satellite MCP Server Container Image
+      containers.podman.podman_image:
+        name: "{{ mcp_image }}"
+
+    - name: Launch MCP AI Gateway with restricted FSI action capabilities
+      containers.podman.podman_container:
+        name: satellite-mcp-server
+        image: "{{ mcp_image }}"
+        state: started
+        restart_policy: always
+        interactive: true
+        tty: true
+        ports:
+          - "127.0.0.1:{{ mcp_port }}:8080"
+        volumes:
+          - "{{ satellite_ca_path }}:/app/ca.pem:ro,Z"
+        command: >
+          --foreman-url https://{{ satellite_fqdn }}
+          --allowed-cv-actions "{{ mcp_allowed_cv_actions }}"
+          --allowed-rex-features "{{ mcp_allowed_rex_features }}"
+        env:
+          FOREMAN_PAT: "{{ mcp_pat_token }}"

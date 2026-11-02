@@ -1,0 +1,28 @@
+---
+- name: Configure Disconnected Red Hat Lightspeed on Satellite 6.19
+  hosts: satellite_servers
+  become: true
+  vars_files:
+    - ../vars/fsi_airgap_vars.yml
+
+  tasks:
+    - name: Import Red Hat Lightspeed container archives into local storage
+      ansible.builtin.shell: |
+        for tarfile in {{ lightspeed_container_dir }}/*.tar; do
+          name=$(basename "${tarfile}" .tar)
+          skopeo copy "oci-archive:${tarfile}" "containers-storage:registry.redhat.io/satellite/${name}:6.19"
+        done
+      args:
+        executable: /bin/bash
+
+    - name: Enable In-Satellite Red Hat Lightspeed via satellite-installer
+      ansible.builtin.command: >
+        satellite-installer --enable-iop
+
+    - name: Deploy offline CVE Mapping Data file for Vulnerability engine
+      ansible.builtin.copy:
+        src: ../files/cvemap.xml
+        dest: /var/lib/foreman/cvemap.xml
+        owner: foreman
+        group: foreman
+        mode: '0644'

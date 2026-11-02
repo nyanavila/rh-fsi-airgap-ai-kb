@@ -1,0 +1,61 @@
+---
+- name: Deploy Red Hat Offline Knowledge Portal (RHOKP) in Disconnected FSI Environment
+  hosts: kb_servers
+  become: true
+  vars_files:
+    - ../vars/fsi_airgap_vars.yml
+
+  tasks:
+    - name: Ensure Podman and container dependencies are installed
+      ansible.builtin.dnf:
+        name:
+          - podman
+          - ca-certificates
+        state: present
+
+    - name: Create directory for custom SSL certificates
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      loop:
+        - /opt/rhokp/httpd-ssl/certs
+        - /opt/rhokp/httpd-ssl/private
+
+    - name: Copy TLS Certificate and Private Key to RHOKP storage
+      ansible.builtin.copy:
+        src: "../configs/rhokp/httpd-ssl/{{ item.src }}"
+        dest: "/opt/rhokp/httpd-ssl/{{ item.dest }}"
+        mode: '0600'
+      loop:
+        - { src: 'certs/rhokp-server.pem', dest: 'certs/rhokp-server.pem' }
+        - { src: 'private/rhokp-server-key.pem', dest: 'private/rhokp-server-key.pem' }
+
+    - name: Deploy RHOKP Container via Podman
+      containers.podman.podman_container:
+        name: rhokp-service
+        image: "{{ rhokp_image }}"
+        state: started
+        restart_policy: always
+        ports:
+          - "{{ rhokp_http_port }}:8080"
+          - "{{ rhokp_https_port }}:8443"
+        volumes:
+          - /opt/rhokp/httpd-ssl:/opt/app-root/httpd-ssl:Z
+        env:
+          ACCESS_KEY: "{{ rhokp_access_key }}"
+          UNCLASSIFIED_BANNER: "{{ fsi_unclassified_banner }}"
+          SOLR_MEM: "{{ rhokp_solr_memory }}"
+          ONLINE_VIEW: "false"
+
+    - name: Open firewall ports for local network access
+      ansible.posix.firewalld:
+        port: "{{ item }}/tcp"
+        permanent: true
+        state: enabled
+        immediate: true
+      loop:
+        - "{{ rhokp_http_port }}"
+        - "{{ rhokp_https_port }}"

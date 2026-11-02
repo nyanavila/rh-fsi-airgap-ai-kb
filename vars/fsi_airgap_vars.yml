@@ -1,0 +1,27 @@
+---
+# Financial Institution Global Settings
+fsi_domain: "fsi.internal"
+fsi_unclassified_banner: "true"
+
+# Red Hat Offline Knowledge Portal (RHOKP)
+rhokp_image: "registry.redhat.io/offline-knowledge-portal/rhokp-rhel9:latest"
+rhokp_access_key: "CHANGE_ME_RHOKP_ACCESS_KEY"
+rhokp_http_port: 8080
+rhokp_https_port: 8443
+rhokp_solr_memory: "4g"
+
+# Satellite Server Configuration
+satellite_fqdn: "satellite.fsi.internal"
+satellite_admin_user: "admin"
+satellite_admin_password: "VaultSecretPassword123!"
+satellite_ca_path: "/etc/pki/ca-trust/source/anchors/katello-server-ca.crt"
+
+# Red Hat Lightspeed In-Satellite (IoP)
+lightspeed_container_dir: "/tmp/lightspeed_tarball"
+
+# Model Context Protocol (MCP) Server for AI Assistant
+mcp_image: "registry.redhat.io/satellite/foreman-mcp-server-rhel9:6.18"
+mcp_port: 8080
+mcp_pat_token: "CHANGE_ME_SATELLITE_PAT"
+mcp_allowed_cv_actions: "publish,promote,incremental_update"
+mcp_allowed_rex_features: "katello_errata_install,katello_errata_install_by_search"
